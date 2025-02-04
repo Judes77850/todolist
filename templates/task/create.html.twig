@@ -1,0 +1,34 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Créer une nouvelle tâche{% endblock %}
+
+{% block body %}
+    {% include 'navbar.html.twig' %}
+    <div class="container mt-5">
+        <h1>Créer une nouvelle tâche</h1>
+
+        <form method="POST" action="{{ path('task_create') }}">
+            {{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': 'novalidate'}}) }}
+
+            <div class="mb-3">
+                {{ form_label(form.title, null, {'label_attr': {'class': 'form-label'}}) }}
+                {{ form_widget(form.title, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(form.title, {'attr': {'class': 'invalid-feedback'}}) }}
+            </div>
+
+            <div class="mb-3">
+                {{ form_label(form.content, null, {'label_attr': {'class': 'form-label'}}) }}
+                {{ form_widget(form.content, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(form.content, {'attr': {'class': 'invalid-feedback'}}) }}
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Créer</button>
+            </div>
+
+            {{ form_end(form) }}
+        </form>
+
+        <a href="{{ path('task_index') }}" class="btn btn-secondary mt-3">Retour à la liste des tâches</a>
+    </div>
+{% endblock %}
