@@ -5,26 +5,16 @@
         <h1>Connexion</h1>
 
         <form method="post" class="needs-validation" novalidate>
-            <div class="mb-3">
-                <label for="_username" class="form-label">Nom d'utilisateur</label>
-                <input type="text" name="_username" id="_username" class="form-control" required placeholder="Nom d'utilisateur">
-                <div class="invalid-feedback">
-                    Veuillez entrer votre nom d'utilisateur.
-                </div>
-            </div>
+            <label for="username">Nom d'utilisateur :</label>
+            <input type="text" id="username" name="_username" value="{{ last_username }}" />
 
-            <div class="mb-3">
-                <label for="_password" class="form-label">Mot de passe</label>
-                <input type="password" name="_password" id="_password" class="form-control" required placeholder="Mot de passe">
-                <div class="invalid-feedback">
-                    Veuillez entrer votre mot de passe.
-                </div>
-            </div>
+            <label for="password">Mot de passe :</label>
+            <input type="password" id="password" name="_password" />
 
             <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
 
             <div class="mb-3">
-                <button type="submit" class="btn btn-primary">Se connecter</button>
+                <button type="submit" class="btn btn-success">Se connecter</button>
             </div>
         </form>
 

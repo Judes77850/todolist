@@ -18,6 +18,9 @@ class TaskController extends AbstractController
 	public function index(TaskRepository $taskRepository, Security $security): Response
 	{
 		$user = $security->getUser();
+		if (!$user) {
+			return $this->redirectToRoute('app_login');
+		}
 		$tasks = $taskRepository->findUserTasks($user);
 
 		return $this->render('task/index.html.twig', [
@@ -62,6 +65,7 @@ class TaskController extends AbstractController
 
 		$task->setIsDeleted(true);
 		$entityManager->flush();
+		$this->addFlash('success', 'La tâche a bien été supprimée.');
 
 		return $this->redirectToRoute('task_index');
 	}
@@ -69,7 +73,7 @@ class TaskController extends AbstractController
 	#[Route(path: '/tasks/{id}/edit', name: 'task_edit', methods: ['GET', 'POST'])]
 	public function edit(Task $task, Request $request, EntityManagerInterface $entityManager): Response
 	{
-		if ($task->getAuthor() !== $this->getUser()) {
+		if ($task->getAuthor() !== $this->getUser() && !$this->isGranted('ROLE_ADMIN')) {
 			throw $this->createAccessDeniedException('You cannot edit this task');
 		}
 
@@ -78,11 +82,29 @@ class TaskController extends AbstractController
 
 		if ($form->isSubmitted() && $form->isValid()) {
 			$entityManager->flush();
+			$this->addFlash('success', 'La tâche a bien été modifiée.');
 			return $this->redirectToRoute('task_index');
 		}
 
 		return $this->render('task/edit.html.twig', [
 			'form' => $form->createView(),
+			'task' => $task,
+		]);
+	}
+
+	#[Route(path: '/tasks/done', name: 'task_done_index')]
+	public function deletedIndex(TaskRepository $taskRepository, Security $security): Response
+	{
+		$user = $security->getUser();
+		if (!$user) {
+			return $this->redirectToRoute('app_login');
+		}
+
+		$doneTasks = $taskRepository->findBy(['author' => $user, 'isDone' => true]);
+
+		return $this->render('task/done_index.html.twig', [
+			'tasks' => $doneTasks,
+			'user' => $user,
 		]);
 	}
 
@@ -91,6 +113,7 @@ class TaskController extends AbstractController
 	{
 		$task->setIsDone(!$task->isDone());
 		$entityManager->flush();
+		$this->addFlash('success', sprintf('La tâche %s a bien été marquée comme faite.', $task->getTitle()));
 
 		return $this->redirectToRoute('task_index');
 	}

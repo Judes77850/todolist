@@ -13,7 +13,7 @@ class HomeController extends AbstractController
 	public function index(Security $security): Response
 	{
 		$user = $security->getUser();
-		return $this->render('home/index.html.twig',[
+		return $this->render('default/index.html.twig',[
 		'username' => $user ? $user->getUserIdentifier() : 'Invité',
 	]);
 	}

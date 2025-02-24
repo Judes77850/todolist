@@ -26,6 +26,13 @@ class TaskRepository extends ServiceEntityRepository
 			->getQuery()
 			->getResult();
 	}
+	public function findNoDeletedTasks(): array
+	{
+		return $this->createQueryBuilder('t')
+			->andWhere('t.isDeleted = false')
+			->getQuery()
+			->getResult();
+	}
 
 
 	//    /**

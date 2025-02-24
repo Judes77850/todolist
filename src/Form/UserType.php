@@ -18,11 +18,13 @@ class UserType extends AbstractType
 	        ->add('username', TextType::class, [
 		        'label' => 'Nom d\'utilisateur',
 			])
+	        ->add('email', TextType::class, [
+		        'label' => 'email',
+			])
 	        ->add('password', PasswordType::class, [
 		        'label' => 'Mot de passe',
 		        'mapped' => false,
 	        ])
-	        ->add('save', SubmitType::class, ['label' => 'Créer un utilisateur'])
         ;
     }
 

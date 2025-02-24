@@ -3,7 +3,9 @@ framework:
     secret: '%env(APP_SECRET)%'
 
     # Note that the session will be started ONLY if you read or write from it.
-    session: true
+    session:
+        cookie_lifetime: 3600 # 1 heure (en secondes), modifie si nécessaire
+        cookie_secure: auto  # Si tu es en HTTPS
 
     #esi: true
     #fragments: true

@@ -4,12 +4,15 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Form\UserType;
+use App\Repository\TaskRepository;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class UserController extends AbstractController
 {
@@ -24,6 +27,105 @@ class UserController extends AbstractController
 			'errors' => [],
 		]);
 	}
+
+	#[Route('/users/{id}/edit', name: 'user_edit', methods: ['GET', 'POST'])]
+	#[IsGranted('ROLE_ADMIN')]
+	public function editUser(
+		User $user,
+		Request $request,
+		UserPasswordHasherInterface $passwordHasher,
+		EntityManagerInterface $entityManager
+	): Response {
+		$form = $this->createForm(UserType::class, $user);
+		$form->handleRequest($request);
+
+		if ($form->isSubmitted() && $form->isValid()) {
+			$plainPassword = $form->get('password')->getData();
+
+			if (!empty($plainPassword)) {
+				$hashedPassword = $passwordHasher->hashPassword($user, $plainPassword);
+				$user->setPassword($hashedPassword);
+			}
+
+			try {
+				$entityManager->flush();
+				$this->addFlash('success', 'Utilisateur mis à jour avec succès.');
+				return $this->redirectToRoute('user_index');
+			} catch (\Exception $e) {
+				$this->addFlash('danger', 'Erreur lors de la mise à jour de l\'utilisateur.');
+			}
+		}
+
+		return $this->render('user/edit.html.twig', [
+			'form' => $form->createView(),
+			'user' => $user,
+		]);
+	}
+
+	#[Route('/admin/users', name: 'user_index', methods: ['GET'])]
+	#[IsGranted('ROLE_ADMIN')]
+	public function index(UserRepository $userRepository): Response
+	{
+		return $this->render('user/index.html.twig', [
+			'users' => $userRepository->findAll(),
+		]);
+	}
+
+	#[Route('/users/{id}/edit-role', name: 'user_edit_role', methods: ['POST'])]
+	#[IsGranted('ROLE_ADMIN')]
+	public function editUserRole(User $user, Request $request, EntityManagerInterface $entityManager): Response
+	{
+		$this->denyAccessUnlessGranted('ROLE_ADMIN');
+
+		$newRole = $request->request->get('role');
+
+		if (!in_array($newRole, ['ROLE_USER', 'ROLE_ADMIN'])) {
+			$this->addFlash('danger', 'Rôle invalide.');
+			return $this->redirectToRoute('user_index');
+		}
+
+		$user->setRoles([$newRole]);
+		$entityManager->flush();
+
+		$this->addFlash('success', 'Rôle mis à jour avec succès.');
+		return $this->redirectToRoute('user_index');
+	}
+
+	#[Route('/admin/tasks', name: 'task_manage', methods: ['GET'])]
+	#[IsGranted('ROLE_ADMIN')]
+	public function manageTasks(Request $request, TaskRepository $taskRepository): Response
+	{
+		$showDeleted = $request->query->get('showDeleted') === 'on';
+
+		if ($showDeleted) {
+			$tasks = $taskRepository->findAll();
+		} else {
+			$tasks = $taskRepository->findNoDeletedTasks();
+		}
+
+		return $this->render('task/manage.html.twig', [
+			'tasks' => $tasks,
+			'showDeleted' => $showDeleted,
+		]);
+	}
+	#[Route('/admin/tasks/{id}/restore', name: 'task_restore', methods: ['POST'])]
+	#[IsGranted('ROLE_ADMIN')]
+	public function restoreTask(int $id, TaskRepository $taskRepository, EntityManagerInterface $entityManager): Response
+	{
+		$task = $taskRepository->find($id);
+
+		if (!$task) {
+			throw $this->createNotFoundException('La tâche n\'existe pas.');
+		}
+
+		$task->setIsDeleted(false);
+		$entityManager->persist($task);
+		$entityManager->flush();
+
+		$this->addFlash('success', 'Tâche restaurée avec succès.');
+		return $this->redirectToRoute('task_manage');
+	}
+
 
 	#[Route('/create-user', name: 'handle_create_user', methods: ['POST'])]
 	public function handleCreateUser(
