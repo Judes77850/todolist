@@ -87,7 +87,7 @@ class UserController extends AbstractController
 		$user->setRoles([$newRole]);
 		$entityManager->flush();
 
-		$this->addFlash('success', 'Rôle mis à jour avec succès.');
+		$this->addFlash('alert-success', 'Rôle mis à jour avec succès.');
 		return $this->redirectToRoute('user_index');
 	}
 
@@ -162,7 +162,6 @@ class UserController extends AbstractController
 				$entityManager->persist($user);
 				$entityManager->flush();
 			} catch (\Exception $e) {
-				dump($e->getMessage());
 				return new Response('Erreur lors de la création de l\'utilisateur', Response::HTTP_INTERNAL_SERVER_ERROR);
 			}
 

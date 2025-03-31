@@ -37,7 +37,6 @@ class TaskController extends AbstractController
 		$form = $this->createForm(TaskType::class, $task);
 
 		$user = $security->getUser();
-		dump($user);
 
 		$form->handleRequest($request);
 
