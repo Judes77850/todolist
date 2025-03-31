@@ -1,15 +1,20 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
+        {% if error %}
+            <div id="alert-danger" class="alert alert-danger mt-3">
+              identifiant ou mot de passe incorrect
+            </div>
+        {% endif %}
     <div class="container mt-5">
         <h1>Connexion</h1>
 
         <form method="post" class="needs-validation" novalidate>
             <label for="username">Nom d'utilisateur :</label>
-            <input type="text" id="username" name="_username" value="{{ last_username }}" />
+            <input type="text" id="username" name="_username" value="{{ last_username }}"/>
 
             <label for="password">Mot de passe :</label>
-            <input type="password" id="password" name="_password" />
+            <input type="password" id="password" name="_password"/>
 
             <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
 
@@ -18,10 +23,5 @@
             </div>
         </form>
 
-        {% if error %}
-            <div class="alert alert-danger mt-3">
-                {{ error.messageKey|trans(error.messageData, 'security') }}
-            </div>
-        {% endif %}
     </div>
 {% endblock %}

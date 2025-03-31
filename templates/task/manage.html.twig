@@ -15,7 +15,7 @@
             <button type="submit" class="btn btn-secondary btn-sm mt-4">Filtrer</button>
         </form>
 
-        <table class="table">
+        <table class="table task-list">
             <thead>
             <tr>
                 <th>ID</th>
@@ -26,7 +26,7 @@
             </thead>
             <tbody>
             {% for task in tasks %}
-                <tr {% if task.isDeleted %} class="table-danger" {% endif %}>
+                <tr {% if task.isDeleted %} class="table-danger"  {% endif %}>
                     <td>{{ task.id }}</td>
                     <td>{{ task.title }}</td>
                     <td>{{ task.author ? task.author.username : 'Anonyme' }}</td>

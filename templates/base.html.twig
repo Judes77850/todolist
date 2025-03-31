@@ -41,11 +41,11 @@
         <a href="{{ path('create_user') }}" class="btn btn-primary">Créer un utilisateur</a>
 
         {% if app.user %}
-            <a href="{{ path('app_logout') }}" class="pull-right btn btn-danger">Se déconnecter</a>
+            <a href="{{ path('app_logout') }}" id="deconnexion" class="pull-right btn btn-danger">Se déconnecter</a>
         {% endif %}
 
         {% if not app.user and 'app_login' != app.request.attributes.get('_route') %}
-            <a href="{{ path('app_login') }}" class="btn btn-success">Se connecter</a>
+            <a href="{{ path('app_login') }}" id="connexion" class="btn btn-success">Se connecter</a>
         {% endif %}
         {% if app.user and is_granted('ROLE_ADMIN') %}
             <p>Admin :</p>
