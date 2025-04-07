@@ -47,20 +47,35 @@ class UserControllerTest extends WebTestCase
 		$this->assertNotNull($user);
 	}
 
-	public function testEditUserRequiresAdminRole(): void
+	public function testEditUserAuthorization(): void
 	{
 		$client = static::createClient();
-		$client->request('GET', '/users/1/edit');
+		$userRepository = $this->getUserRepository();
 
+
+		$client->request('GET', '/users/323/edit');
 		$this->assertResponseStatusCodeSame(Response::HTTP_FOUND);
 		$this->assertResponseRedirects('/login');
 
-		$client->loginUser($this->getUserRepository()->findOneBy(['username' => 'julien8']));
-		$client->request('GET', '/users/1/edit');
 
+		$user = $userRepository->findOneBy(['username' => 'user1']);
+		$this->assertNotNull($user, 'Utilisateur de test non trouvé');
+
+		$client->loginUser($user);
+		$client->request('GET', '/users/323/edit');
+		$this->assertResponseIsSuccessful();
+
+		$client->request('GET', '/users/2/edit');
 		$this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
-	}
 
+
+		$admin = $userRepository->findOneBy(['username' => 'admin_user']);
+		$this->assertNotNull($admin, 'Admin non trouvé');
+
+		$client->loginUser($admin);
+		$client->request('GET', '/users/2/edit');
+		$this->assertResponseIsSuccessful();
+	}
 	public function testEditUserRole(): void
 	{
 		$client = static::createClient();

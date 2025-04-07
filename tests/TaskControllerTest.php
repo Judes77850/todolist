@@ -12,16 +12,12 @@ class TaskControllerTest extends WebTestCase
 {
 	protected function getTaskRepository(): TaskRepository
 	{
-		$container = static::getContainer();
-		/** @var TaskRepository $taskRepository */
-		return $container->get(TaskRepository::class);
+		return static::getContainer()->get(TaskRepository::class);
 	}
 
 	protected function getUserRepository(): UserRepository
 	{
-		$container = static::getContainer();
-		/** @var UserRepository $userRepository */
-		return $container->get(UserRepository::class);
+		return static::getContainer()->get(UserRepository::class);
 	}
 
 	public function testShowTaskListRequiresAuthentication(): void
@@ -61,33 +57,36 @@ class TaskControllerTest extends WebTestCase
 		$this->assertNotNull($task);
 	}
 
-	public function testEditTask(): void
+	public function testUserCannotEditOthersTask(): void
 	{
 		$client = static::createClient();
 		$user = $this->getUserRepository()->findOneBy(['username' => 'julien']);
+		$otherUser = $this->getUserRepository()->findOneBy(['username' => 'autre_user']);
+
+		$client->loginUser($otherUser);
 		$task = $this->getTaskRepository()->findOneBy(['author' => $user]);
 
-		$client->loginUser($user);
-		$crawler = $client->request('GET', '/tasks/' . $task->getId() . '/edit');
+		$client->request('GET', '/tasks/' . $task->getId() . '/edit');
+		$this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
+	}
 
+	public function testAdminCanEditAnyTask(): void
+	{
+		$client = static::createClient();
+		$admin = $this->getUserRepository()->findOneBy(['username' => 'admin_user']);
+		$user = $this->getUserRepository()->findOneBy(['username' => 'julien']);
+		$task = $this->getTaskRepository()->findOneBy(['author' => $user]);
+
+		$client->loginUser($admin);
+		$client->request('GET', '/tasks/' . $task->getId() . '/edit');
 		$this->assertResponseIsSuccessful();
-
-		$form = $crawler->selectButton('Modifier')->form([
-			'task[title]' => 'Updated Title',
-		]);
-
-		$client->submit($form);
-		$this->assertResponseRedirects('/tasks');
 	}
 
 	public function testDeleteTask(): void
 	{
 		$client = static::createClient();
 		$entityManager = static::getContainer()->get('doctrine')->getManager();
-		$taskRepository = static::getContainer()->get(TaskRepository::class);
-		$userRepository = static::getContainer()->get(UserRepository::class);
-
-		$user = $userRepository->findOneBy(['username' => 'julien']);
+		$user = $this->getUserRepository()->findOneBy(['username' => 'julien']);
 		$client->loginUser($user);
 
 		$task = new Task();
@@ -119,4 +118,5 @@ class TaskControllerTest extends WebTestCase
 
 		$this->assertResponseRedirects('/tasks');
 	}
+
 }

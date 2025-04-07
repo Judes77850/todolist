@@ -29,7 +29,7 @@ class UserController extends AbstractController
 	}
 
 	#[Route('/users/{id}/edit', name: 'user_edit', methods: ['GET', 'POST'])]
-	#[IsGranted('ROLE_ADMIN')]
+	#[IsGranted('USER_EDIT', subject: 'user')]
 	public function editUser(
 		User $user,
 		Request $request,
