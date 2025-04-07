@@ -29,7 +29,13 @@
                 <tr {% if task.isDeleted %} class="table-danger"  {% endif %}>
                     <td>{{ task.id }}</td>
                     <td>{{ task.title }}</td>
-                    <td>{{ task.author ? task.author.username : 'Anonyme' }}</td>
+                    <td>
+                        {% if task.author is not null %}
+                            {{ task.author.username }}
+                        {% else %}
+                            Anonyme
+                        {% endif %}
+                    </td>
                     <td>
                         {% if task.isDeleted %}
                             <form action="{{ path('task_restore', {'id': task.id}) }}" method="POST" style="display:inline;">
@@ -40,12 +46,14 @@
                             </form>
                         {% else %}
                             <a href="{{ path('task_edit', {'id': task.id}) }}" class="btn btn-warning btn-sm">Modifier</a>
-                            <form action="{{ path('task_delete', {'id': task.id}) }}" method="POST" style="display:inline;">
-                                <input type="hidden" name="_method" value="DELETE">
-                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?');">
-                                    Supprimer
-                                </button>
-                            </form>
+                            {% if app.user == task.author or (is_granted('ROLE_ADMIN') and task.author is not null and task.author.username == 'anonyme') %}
+                                <form action="{{ path('task_delete', {'id': task.id}) }}" method="POST" style="display:inline;">
+                                    <input type="hidden" name="_method" value="DELETE">
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?');">
+                                        Supprimer
+                                    </button>
+                                </form>
+                            {% endif %}
                         {% endif %}
                     </td>
                 </tr>

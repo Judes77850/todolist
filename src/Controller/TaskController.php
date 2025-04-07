@@ -11,6 +11,7 @@ use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class TaskController extends AbstractController
 {
@@ -56,26 +57,26 @@ class TaskController extends AbstractController
 	}
 
 	#[Route(path: '/tasks/{id}/delete', name: 'task_delete', methods: ['POST'])]
-	public function delete(Task $task, EntityManagerInterface $entityManager): Response
+	#[IsGranted('TASK_DELETE', 'task')]
+	public function delete(Task $task, EntityManagerInterface $entityManager, Security $security): Response
 	{
-		if ($task->getAuthor() !== $this->getUser() && !$this->isGranted('ROLE_ADMIN')) {
-			throw $this->createAccessDeniedException('Vous ne pouvez pas supprimer cette tâche');
-		}
+		$user = $security->getUser();
 
-		$task->setIsDeleted(true);
-		$entityManager->flush();
-		$this->addFlash('success', 'La tâche a bien été supprimée.');
+		if ($task->getAuthor() === $user || ($this->isGranted('ROLE_ADMIN') && $task->getAuthor()->getUsername() === 'anonyme')) {
+			$task->setIsDeleted(true);
+			$entityManager->flush();
+			$this->addFlash('success', 'La tâche a bien été supprimée.');
+		} else {
+			$this->addFlash('error', 'Vous n\'avez pas les droits nécessaires pour supprimer cette tâche.');
+		}
 
 		return $this->redirectToRoute('task_index');
 	}
 
 	#[Route(path: '/tasks/{id}/edit', name: 'task_edit', methods: ['GET', 'POST'])]
+	#[IsGranted('TASK_EDIT', 'task')]
 	public function edit(Task $task, Request $request, EntityManagerInterface $entityManager): Response
 	{
-		if ($task->getAuthor() !== $this->getUser() && !$this->isGranted('ROLE_ADMIN')) {
-			throw $this->createAccessDeniedException('You cannot edit this task');
-		}
-
 		$form = $this->createForm(TaskType::class, $task);
 		$form->handleRequest($request);
 
