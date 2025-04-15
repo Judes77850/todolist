@@ -11,11 +11,13 @@ use Symfony\Component\HttpFoundation\Response;
 class TaskControllerTest extends WebTestCase
 {
 	protected $client;
+
 	protected function setUp(): void
 	{
 		parent::setUp();
 		$this->client = static::createClient();
 	}
+
 	protected function getTaskRepository(): TaskRepository
 	{
 		return static::getContainer()->get(TaskRepository::class);
