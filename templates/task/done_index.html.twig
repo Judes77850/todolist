@@ -10,6 +10,14 @@
                         <div class="caption">
                             <h5>{{ task.title }}</h5>
                             <p>{{ task.content }}</p>
+                            <form action="{{ path('task_toggle', {'id': task.id}) }}" method="POST"
+                                  style="display:inline;">
+                                {% if not task.isDone %}
+                                    <button class="btn btn-success btn-sm pull-right">Terminée</button>
+                                {% else %}
+                                    <button class="btn btn-warning btn-sm pull-right">Non terminée</button>
+                                {% endif %}
+                            </form>
                         </div>
                     </div>
                 </div>
