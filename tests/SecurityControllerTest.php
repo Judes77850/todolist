@@ -46,13 +46,25 @@ class SecurityControllerTest extends WebTestCase
 
 		$userRepository = static::getContainer()->get('doctrine')->getRepository(User::class);
 		$testUser = $userRepository->findOneBy(['username' => 'test-user']);
+
+		if (!$testUser) {
+			$testUser = new User();
+			$testUser->setUsername('test-user');
+			$testUser->setPassword('password');
+			$testUser->setEmail('test-user@example.com');
+			$testUser->setRoles(['ROLE_USER']);
+
+			$entityManager = static::getContainer()->get('doctrine')->getManager();
+			$entityManager->persist($testUser);
+			$entityManager->flush();
+		}
+
 		$client->loginUser($testUser);
 
 		$client->request('GET', '/');
 		$this->assertResponseIsSuccessful();
 
 		$client->request('GET', '/logout');
-
 		$this->assertResponseRedirects('/');
 	}
 }
