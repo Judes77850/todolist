@@ -12,10 +12,10 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class TaskRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
-    {
-        parent::__construct($registry, Task::class);
-    }
+	public function __construct(ManagerRegistry $registry)
+	{
+		parent::__construct($registry, Task::class);
+	}
 
 	public function findUserTasks(User $user): array
 	{
@@ -26,6 +26,7 @@ class TaskRepository extends ServiceEntityRepository
 			->getQuery()
 			->getResult();
 	}
+
 	public function findNoDeletedTasks(): array
 	{
 		return $this->createQueryBuilder('t')
@@ -36,27 +37,27 @@ class TaskRepository extends ServiceEntityRepository
 
 
 	//    /**
-    //     * @return Task[] Returns an array of Task objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('t')
-    //            ->andWhere('t.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('t.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+	//     * @return Task[] Returns an array of Task objects
+	//     */
+	//    public function findByExampleField($value): array
+	//    {
+	//        return $this->createQueryBuilder('t')
+	//            ->andWhere('t.exampleField = :val')
+	//            ->setParameter('val', $value)
+	//            ->orderBy('t.id', 'ASC')
+	//            ->setMaxResults(10)
+	//            ->getQuery()
+	//            ->getResult()
+	//        ;
+	//    }
 
-    //    public function findOneBySomeField($value): ?Task
-    //    {
-    //        return $this->createQueryBuilder('t')
-    //            ->andWhere('t.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+	//    public function findOneBySomeField($value): ?Task
+	//    {
+	//        return $this->createQueryBuilder('t')
+	//            ->andWhere('t.exampleField = :val')
+	//            ->setParameter('val', $value)
+	//            ->getQuery()
+	//            ->getOneOrNullResult()
+	//        ;
+	//    }
 }

@@ -17,13 +17,13 @@ use Symfony\Component\Security\Http\Util\TargetPathTrait;
 
 class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
 {
-    use TargetPathTrait;
+	use TargetPathTrait;
 
-    public const LOGIN_ROUTE = 'app_login';
+	public const LOGIN_ROUTE = 'app_login';
 
-    public function __construct(private UrlGeneratorInterface $urlGenerator)
-    {
-    }
+	public function __construct(private UrlGeneratorInterface $urlGenerator)
+	{
+	}
 
 	public function authenticate(Request $request): Passport
 	{
@@ -40,6 +40,7 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
 			]
 		);
 	}
+
 	public function getCredentials(Request $request): array
 	{
 		return [
@@ -59,8 +60,8 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
 		return new RedirectResponse($this->urlGenerator->generate('app_home'));
 	}
 
-    protected function getLoginUrl(Request $request): string
-    {
-        return $this->urlGenerator->generate(self::LOGIN_ROUTE);
-    }
+	protected function getLoginUrl(Request $request): string
+	{
+		return $this->urlGenerator->generate(self::LOGIN_ROUTE);
+	}
 }

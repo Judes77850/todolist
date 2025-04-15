@@ -31,11 +31,12 @@ class UserController extends AbstractController
 	#[Route('/users/{id}/edit', name: 'user_edit', methods: ['GET', 'POST'])]
 	#[IsGranted('USER_EDIT', subject: 'user')]
 	public function editUser(
-		User $user,
-		Request $request,
+		User                        $user,
+		Request                     $request,
 		UserPasswordHasherInterface $passwordHasher,
-		EntityManagerInterface $entityManager
-	): Response {
+		EntityManagerInterface      $entityManager
+	): Response
+	{
 		$form = $this->createForm(UserType::class, $user);
 		$form->handleRequest($request);
 
@@ -108,6 +109,7 @@ class UserController extends AbstractController
 			'showDeleted' => $showDeleted,
 		]);
 	}
+
 	#[Route('/admin/tasks/{id}/restore', name: 'task_restore', methods: ['POST'])]
 	#[IsGranted('ROLE_ADMIN')]
 	public function restoreTask(int $id, TaskRepository $taskRepository, EntityManagerInterface $entityManager): Response
@@ -129,10 +131,11 @@ class UserController extends AbstractController
 
 	#[Route('/create-user', name: 'handle_create_user', methods: ['POST'])]
 	public function handleCreateUser(
-		Request $request,
+		Request                     $request,
 		UserPasswordHasherInterface $passwordHasher,
-		EntityManagerInterface $entityManager
-	): Response {
+		EntityManagerInterface      $entityManager
+	): Response
+	{
 		$user = new User();
 		$form = $this->createForm(UserType::class, $user);
 		$form->handleRequest($request);

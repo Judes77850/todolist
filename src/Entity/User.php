@@ -31,6 +31,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 	{
 		return $this->id;
 	}
+
 	public function getUserIdentifier(): string
 	{
 		return $this->username;
@@ -82,5 +83,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 		return $this;
 	}
 
-	public function eraseCredentials(): void {}
+	public function eraseCredentials(): void
+	{
+	}
 }
