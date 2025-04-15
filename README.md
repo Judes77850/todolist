@@ -34,7 +34,7 @@ Installation
 
 Cloner le dépôt :
 
-git clone https://github.com/Judes77850/todolist.git
+git clone <https://github.com/Judes77850/todolist.git>
 cd todolist
 
 Installer les dépendances PHP :
