@@ -3,6 +3,7 @@
 namespace App\DataFixtures;
 
 use App\Entity\User;
+use App\Entity\Task;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -32,7 +33,17 @@ class AppFixtures extends Fixture
 		$nonAdminUser->setEmail('user@example.com');
 		$manager->persist($nonAdminUser);
 
+		for ($i = 1; $i <= 5; $i++) {
+			$task = new Task();
+			$task->setTitle("Tâche $i");
+			$task->setContent("Contenu de la tâche $i.");
+			$task->setCreatedAt(new \DateTime());
+			$task->setAuthor($adminUser);
+			$manager->persist($task);
+		}
+
 		$manager->flush();
 	}
+
 }
 

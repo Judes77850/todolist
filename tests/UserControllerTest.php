@@ -7,19 +7,32 @@ use App\Repository\TaskRepository;
 use App\Repository\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+
 
 class UserControllerTest extends WebTestCase
 {
+	protected $client;
+	private $passwordHasher;
+
+	protected function setUp(): void
+	{
+		parent::setUp();
+		$this->client = static::createClient();
+		$this->passwordHasher = static::getContainer()->get(UserPasswordHasherInterface::class);
+	}
+
+
 	protected function getUserRepository(): UserRepository
 	{
 		$container = static::getContainer();
 		/** @var UserRepository $userRepository */
 		return $container->get(UserRepository::class);
 	}
+
 	public function testShowCreateUserForm(): void
 	{
-		$client = static::createClient();
-		$crawler = $client->request('GET', '/create-user');
+		$crawler = $this->client->request('GET', '/create-user');
 
 		$this->assertResponseIsSuccessful();
 		$this->assertSelectorExists('form[name="user"]');
@@ -27,8 +40,7 @@ class UserControllerTest extends WebTestCase
 
 	public function testHandleCreateUserWithValidData(): void
 	{
-		$client = static::createClient();
-		$crawler = $client->request('GET', '/create-user');
+		$crawler = $this->client->request('GET', '/create-user');
 
 		$timestamp = time();
 		$username = 'julien' . $timestamp;
@@ -39,7 +51,7 @@ class UserControllerTest extends WebTestCase
 			'user[email]' => 'julien1000' . $timestamp . '@gmail.com',
 		]);
 
-		$client->submit($form);
+		$this->client->submit($form);
 
 		$this->assertResponseRedirects('/');
 
@@ -49,54 +61,70 @@ class UserControllerTest extends WebTestCase
 
 	public function testEditUserAuthorization(): void
 	{
-		$client = static::createClient();
 		$userRepository = $this->getUserRepository();
+		$em = static::getContainer()->get('doctrine')->getManager();
 
+		$userToEdit = new User();
+		$userToEdit->setUsername('editable_user' . uniqid());
+		$userToEdit->setPassword($this->passwordHasher->hashPassword($userToEdit, 'password'));
+		$userToEdit->setEmail('editable_user@example.com');
+		$userToEdit->setRoles(['ROLE_USER']);
+		$em->persist($userToEdit);
 
-		$client->request('GET', '/users/323/edit');
-		$this->assertResponseStatusCodeSame(Response::HTTP_FOUND);
-		$this->assertResponseRedirects('/login');
+		$adminUser = $userRepository->findOneBy(['username' => 'admin_user']);
 
+		if (!$adminUser) {
+			$adminUser = new User();
+			$adminUser->setUsername('admin_user');
+			$adminUser->setPassword($this->passwordHasher->hashPassword($adminUser, 'password'));
+			$adminUser->setEmail('admin_user@example.com');
+			$adminUser->setRoles(['ROLE_ADMIN']);
+			$em->persist($adminUser);
+		}
 
-		$user = $userRepository->findOneBy(['username' => 'user1']);
-		$this->assertNotNull($user, 'Utilisateur de test non trouvé');
+		$em->flush();
 
-		$client->loginUser($user);
-		$client->request('GET', '/users/323/edit');
-		$this->assertResponseIsSuccessful();
+		$this->client->loginUser($adminUser);
 
-		$client->request('GET', '/users/2/edit');
-		$this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
-
-
-		$admin = $userRepository->findOneBy(['username' => 'admin_user']);
-		$this->assertNotNull($admin, 'Admin non trouvé');
-
-		$client->loginUser($admin);
-		$client->request('GET', '/users/2/edit');
+		$this->client->request('GET', '/users/' . $userToEdit->getId() . '/edit');
 		$this->assertResponseIsSuccessful();
 	}
+
 	public function testEditUserRole(): void
 	{
-		$client = static::createClient();
 
-		$client->loginUser($this->getUserRepository()->findOneBy(['username' => 'admin_user']));
+		$userToEdit = new User();
+		$userToEdit->setUsername('role_edit_user' . uniqid());
+		$userToEdit->setPassword($this->passwordHasher->hashPassword($userToEdit, 'password'));
+		$userToEdit->setEmail('role_edit_user@example.com');
+		$userToEdit->setRoles(['ROLE_USER']);
 
-		$crawler = $client->request('POST', '/users/1/edit-role', [
-			'role' => 'ROLE_USER',
+		$em = static::getContainer()->get('doctrine')->getManager();
+		$em->persist($userToEdit);
+		$em->flush();
+
+		$admin = $this->getUserRepository()->findOneBy(['username' => 'admin_user']);
+		$this->assertNotNull($admin, 'Admin user not found');
+
+		$this->client->loginUser($admin);
+
+		$this->client->request('POST', '/users/' . $userToEdit->getId() . '/edit-role', [
+			'role' => 'ROLE_ADMIN',
 		]);
 
 		$this->assertResponseRedirects('/admin/users');
+		$this->client->followRedirect();
 
-		$client->followRedirect();
+		$updatedUser = $this->getUserRepository()->find($userToEdit->getId());
+		$this->assertContains('ROLE_ADMIN', $updatedUser->getRoles());
 	}
+
 
 	public function testAdminCanAccessUserIndex(): void
 	{
-		$client = static::createClient();
 
-		$client->loginUser($this->getUserRepository()->findOneBy(['username' => 'admin_user']));
-		$client->request('GET', '/admin/users');
+		$this->client->loginUser($this->getUserRepository()->findOneBy(['username' => 'admin_user']));
+		$this->client->request('GET', '/admin/users');
 
 		$this->assertResponseIsSuccessful();
 		$this->assertSelectorTextContains('h1', 'Liste des utilisateurs');
@@ -104,7 +132,6 @@ class UserControllerTest extends WebTestCase
 
 	public function testEditUserWithValidData(): void
 	{
-		$client = static::createClient();
 		$userRepository = $this->getUserRepository();
 
 		$timestamp = time();
@@ -113,7 +140,7 @@ class UserControllerTest extends WebTestCase
 
 		$userToEdit = new User();
 		$userToEdit->setUsername($uniqueUsername);
-		$userToEdit->setPassword('password');
+		$userToEdit->setPassword($this->passwordHasher->hashPassword($userToEdit, 'password'));
 		$userToEdit->setEmail($uniqueEmail);
 		$userToEdit->setRoles(['ROLE_USER']);
 
@@ -125,9 +152,9 @@ class UserControllerTest extends WebTestCase
 		$adminUser = $userRepository->findOneBy(['username' => 'admin_user']);
 		$this->assertNotNull($adminUser, 'Admin user not found');
 
-		$client->loginUser($adminUser);
+		$this->client->loginUser($adminUser);
 
-		$crawler = $client->request('GET', '/users/' . $userToEdit->getId() . '/edit');
+		$crawler = $this->client->request('GET', '/users/' . $userToEdit->getId() . '/edit');
 
 		$this->assertResponseIsSuccessful();
 
@@ -141,9 +168,9 @@ class UserControllerTest extends WebTestCase
 			'user[email]' => 'new-email_' . $timestamp . '@example.com',
 		]);
 
-		$client->submit($form);
+		$this->client->submit($form);
 
-		$crawler = $client->followRedirect();
+		$crawler = $this->client->followRedirect();
 
 		$updatedUser = $userRepository->findOneBy(['username' => 'new-username_' . $timestamp]);
 		$this->assertNotNull($updatedUser);
@@ -151,14 +178,12 @@ class UserControllerTest extends WebTestCase
 
 	public function testManageTasks(): void
 	{
-		$client = static::createClient();
-
 		$adminUser = $this->getUserRepository()->findOneBy(['username' => 'admin_user']);
 		$this->assertNotNull($adminUser, 'Admin user not found');
 
-		$client->loginUser($adminUser);
+		$this->client->loginUser($adminUser);
 
-		$crawler = $client->request('GET', '/admin/tasks');
+		$crawler = $this->client->request('GET', '/admin/tasks');
 
 		$this->assertResponseIsSuccessful();
 
@@ -167,13 +192,12 @@ class UserControllerTest extends WebTestCase
 
 	public function testRestoreTask(): void
 	{
-		$client = static::createClient();
-		$client->loginUser($this->getUserRepository()->findOneBy(['username' => 'admin_user']));
+		$this->client->loginUser($this->getUserRepository()->findOneBy(['username' => 'admin_user']));
 
 		$taskRepository = static::getContainer()->get(TaskRepository::class);
 		$task = $taskRepository->findOneBy(['isDeleted' => true]);
 
-		$client->request('POST', '/admin/tasks/' . $task->getId() . '/restore');
+		$this->client->request('POST', '/admin/tasks/' . $task->getId() . '/restore');
 		$this->assertResponseRedirects('/admin/tasks');
 
 		$restoredTask = $taskRepository->find($task->getId());

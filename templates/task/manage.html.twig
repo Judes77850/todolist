@@ -26,7 +26,7 @@
             </thead>
             <tbody>
             {% for task in tasks %}
-                <tr {% if task.isDeleted %} class="table-danger"  {% endif %}>
+                <tr {% if task.isDeleted %} class="table-danger" {% endif %}>
                     <td>{{ task.id }}</td>
                     <td>{{ task.title }}</td>
                     <td>
@@ -38,18 +38,23 @@
                     </td>
                     <td>
                         {% if task.isDeleted %}
-                            <form action="{{ path('task_restore', {'id': task.id}) }}" method="POST" style="display:inline;">
+                            <form action="{{ path('task_restore', {'id': task.id}) }}" method="POST"
+                                  style="display:inline;">
                                 <input type="hidden" name="_method" value="PATCH">
-                                <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Êtes-vous sûr de vouloir restaurer cette tâche ?');">
+                                <button type="submit" class="btn btn-success btn-sm"
+                                        onclick="return confirm('Êtes-vous sûr de vouloir restaurer cette tâche ?');">
                                     Restaurer
                                 </button>
                             </form>
                         {% else %}
-                            <a href="{{ path('task_edit', {'id': task.id}) }}" class="btn btn-warning btn-sm">Modifier</a>
+                            <a href="{{ path('task_edit', {'id': task.id}) }}"
+                               class="btn btn-warning btn-sm">Modifier</a>
                             {% if app.user == task.author or (is_granted('ROLE_ADMIN') and task.author is not null and task.author.username == 'anonyme') %}
-                                <form action="{{ path('task_delete', {'id': task.id}) }}" method="POST" style="display:inline;">
+                                <form action="{{ path('task_delete', {'id': task.id}) }}" method="POST"
+                                      style="display:inline;">
                                     <input type="hidden" name="_method" value="DELETE">
-                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?');">
+                                    <button type="submit" class="btn btn-danger btn-sm"
+                                            onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?');">
                                         Supprimer
                                     </button>
                                 </form>

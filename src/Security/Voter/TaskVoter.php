@@ -12,7 +12,9 @@ class TaskVoter extends Voter
 	public const EDIT = 'TASK_EDIT';
 	public const DELETE = 'TASK_DELETE';
 
-	public function __construct(private Security $security) {}
+	public function __construct(private Security $security)
+	{
+	}
 
 	protected function supports(string $attribute, mixed $subject): bool
 	{

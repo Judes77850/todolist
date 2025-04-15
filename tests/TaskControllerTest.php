@@ -10,6 +10,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 class TaskControllerTest extends WebTestCase
 {
+	protected $client;
+	protected function setUp(): void
+	{
+		parent::setUp();
+		$this->client = static::createClient();
+	}
 	protected function getTaskRepository(): TaskRepository
 	{
 		return static::getContainer()->get(TaskRepository::class);
@@ -22,26 +28,23 @@ class TaskControllerTest extends WebTestCase
 
 	public function testShowTaskListRequiresAuthentication(): void
 	{
-		$client = static::createClient();
-		$client->request('GET', '/tasks');
+		$this->client->request('GET', '/tasks');
 
 		$this->assertResponseRedirects('/login');
 	}
 
 	public function testAuthenticatedUserCanSeeTasks(): void
 	{
-		$client = static::createClient();
-		$client->loginUser($this->getUserRepository()->findOneBy(['username' => 'julien']));
-		$client->request('GET', '/tasks');
+		$this->client->loginUser($this->getUserRepository()->findOneBy(['username' => 'test-user']));
+		$this->client->request('GET', '/tasks');
 
 		$this->assertResponseIsSuccessful();
 	}
 
 	public function testCreateTask(): void
 	{
-		$client = static::createClient();
-		$client->loginUser($this->getUserRepository()->findOneBy(['username' => 'julien']));
-		$crawler = $client->request('GET', '/task/create');
+		$this->client->loginUser($this->getUserRepository()->findOneBy(['username' => 'test-user']));
+		$crawler = $this->client->request('GET', '/task/create');
 
 		$this->assertResponseIsSuccessful();
 
@@ -50,7 +53,7 @@ class TaskControllerTest extends WebTestCase
 			'task[content]' => 'Test Content',
 		]);
 
-		$client->submit($form);
+		$this->client->submit($form);
 		$this->assertResponseRedirects('/tasks');
 
 		$task = $this->getTaskRepository()->findOneBy(['title' => 'Test Task']);
@@ -59,35 +62,32 @@ class TaskControllerTest extends WebTestCase
 
 	public function testUserCannotEditOthersTask(): void
 	{
-		$client = static::createClient();
-		$user = $this->getUserRepository()->findOneBy(['username' => 'julien']);
-		$otherUser = $this->getUserRepository()->findOneBy(['username' => 'autre_user']);
+		$user = $this->getUserRepository()->findOneBy(['username' => 'test-user']);
+		$otherUser = $this->getUserRepository()->findOneBy(['username' => 'non_admin_user']);
 
-		$client->loginUser($otherUser);
+		$this->client->loginUser($otherUser);
 		$task = $this->getTaskRepository()->findOneBy(['author' => $user]);
 
-		$client->request('GET', '/tasks/' . $task->getId() . '/edit');
+		$this->client->request('GET', '/tasks/' . $task->getId() . '/edit');
 		$this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
 	}
 
 	public function testAdminCanEditAnyTask(): void
 	{
-		$client = static::createClient();
 		$admin = $this->getUserRepository()->findOneBy(['username' => 'admin_user']);
-		$user = $this->getUserRepository()->findOneBy(['username' => 'julien']);
+		$user = $this->getUserRepository()->findOneBy(['username' => 'test-user']);
 		$task = $this->getTaskRepository()->findOneBy(['author' => $user]);
 
-		$client->loginUser($admin);
-		$client->request('GET', '/tasks/' . $task->getId() . '/edit');
+		$this->client->loginUser($admin);
+		$this->client->request('GET', '/tasks/' . $task->getId() . '/edit');
 		$this->assertResponseIsSuccessful();
 	}
 
 	public function testDeleteTask(): void
 	{
-		$client = static::createClient();
 		$entityManager = static::getContainer()->get('doctrine')->getManager();
-		$user = $this->getUserRepository()->findOneBy(['username' => 'julien']);
-		$client->loginUser($user);
+		$user = $this->getUserRepository()->findOneBy(['username' => 'test-user']);
+		$this->client->loginUser($user);
 
 		$task = new Task();
 		$task->setTitle('Test Task');
@@ -100,7 +100,7 @@ class TaskControllerTest extends WebTestCase
 		$entityManager->persist($task);
 		$entityManager->flush();
 
-		$client->request('POST', '/tasks/' . $task->getId() . '/delete');
+		$this->client->request('POST', '/tasks/' . $task->getId() . '/delete');
 
 		$entityManager->refresh($task);
 
@@ -109,12 +109,11 @@ class TaskControllerTest extends WebTestCase
 
 	public function testToggleTaskStatus(): void
 	{
-		$client = static::createClient();
-		$user = $this->getUserRepository()->findOneBy(['username' => 'julien']);
+		$user = $this->getUserRepository()->findOneBy(['username' => 'test-user']);
 		$task = $this->getTaskRepository()->findOneBy(['author' => $user]);
 
-		$client->loginUser($user);
-		$client->request('POST', '/tasks/' . $task->getId() . '/toggle');
+		$this->client->loginUser($user);
+		$this->client->request('POST', '/tasks/' . $task->getId() . '/toggle');
 
 		$this->assertResponseRedirects('/tasks');
 	}
