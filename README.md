@@ -71,8 +71,6 @@ Contributions
 
 Les contributions sont les bienvenues ! Merci de suivre les bonnes pratiques de développement et d'effectuer des pull requests bien documentées.
 
-Auteur
-
 Julien Desaindes
 
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/31c6fec5b54246088701aabf5ccda369)](https://app.codacy.com/gh/Judes77850/todolist/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
