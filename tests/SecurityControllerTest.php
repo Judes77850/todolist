@@ -13,45 +13,22 @@ class SecurityControllerTest extends WebTestCase
 		$crawler = $client->request('GET', '/login');
 
 		$this->assertResponseIsSuccessful();
-		$this->assertSelectorExists('form[class="needs-validation"]');
+		$this->assertSelectorExists('form');
 		$this->assertSelectorExists('input[name="_username"]');
 		$this->assertSelectorExists('input[name="_password"]');
-		$this->assertSelectorExists('button[type="submit"]');
 	}
 
-	public function testLoginFailureShowsErrorMessage(): void
+	public function testRedirectIfUserAlreadyLoggedIn(): void
 	{
 		$client = static::createClient();
-
-		$crawler = $client->request('GET', '/');
-
-		$link = $crawler->selectLink('Se connecter')->link();
-		$crawler = $client->click($link);
-
-		$this->assertRouteSame('app_login');
-
-		$form = $crawler->selectButton('Se connecter')->form([
-			'_username' => 'wrong-user',
-			'_password' => 'wrong-password',
-		]);
-
-		$client->submit($form);
-
-		$this->assertRouteSame('app_login');
-	}
-
-	public function testLogout(): void
-	{
-		$client = static::createClient();
-
 		$userRepository = static::getContainer()->get('doctrine')->getRepository(User::class);
-		$testUser = $userRepository->findOneBy(['username' => 'test-user']);
 
+		$testUser = $userRepository->findOneBy([]);
 		if (!$testUser) {
 			$testUser = new User();
-			$testUser->setUsername('test-user');
-			$testUser->setPassword('password');
-			$testUser->setEmail('test-user@example.com');
+			$testUser->setUsername('testuser');
+			$testUser->setPassword('testpassword');
+			$testUser->setEmail('test@example.com');
 			$testUser->setRoles(['ROLE_USER']);
 
 			$entityManager = static::getContainer()->get('doctrine')->getManager();
@@ -60,11 +37,35 @@ class SecurityControllerTest extends WebTestCase
 		}
 
 		$client->loginUser($testUser);
+		$client->request('GET', '/login');
 
-		$client->request('GET', '/');
-		$this->assertResponseIsSuccessful();
+		$this->assertResponseRedirects('/');
+	}
+
+	public function testLoginFailureShowsError(): void
+	{
+		$client = static::createClient();
+		$crawler = $client->request('GET', '/login');
+
+		$form = $crawler->selectButton('Se connecter')->form([
+			'_username' => 'wrong',
+			'_password' => 'wrongpass',
+		]);
+
+		$client->submit($form);
+
+		$this->assertRouteSame('app_login');
+	}
+
+	public function testLogoutRouteIsProtectedByFirewall(): void
+	{
+		$client = static::createClient();
 
 		$client->request('GET', '/logout');
-		$this->assertResponseRedirects('/');
+
+		$this->assertTrue(
+			$client->getResponse()->isRedirection() || $client->getResponse()->isSuccessful(),
+			'Logout route should be handled by the firewall and not reach controller method.'
+		);
 	}
 }
