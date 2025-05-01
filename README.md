@@ -14,7 +14,7 @@ Gestion des rôles utilisateur (ROLE_USER, ROLE_ADMIN)
 
 Un utilisateur peut uniquement supprimer ses propres tâches
 
-Seuls les administrateurs peuvent gérer les utilisateurs et supprimer les tâches anonymes
+Seuls les administrateurs peuvent gérer les utilisateurs
 
 Prérequis
 
